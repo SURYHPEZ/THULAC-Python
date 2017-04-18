@@ -1,65 +1,51 @@
-#coding: utf-8
+# coding: utf-8
+
 import os
+import string
 import struct
+
 from ..base.compatibility import chrGenerator
+
 
 chr = chrGenerator()
 
+
+HTTP_SYMBOL_SET = {'/', '.', ':', '#', '"', '_', '-', '=', '+', '&', '$', ';'}
+LETTERS_AND_DIGITS_SET = set(string.ascii_letters + string.digits)
+
+
 class Preprocesser:
     def __init__(self, rm_space=False):
-        self.otherSet = []
-        self.singlePunSet = []
-        self.httpSet = []
+        self.otherSet = {
+            65292, 12290, 65311, 65281, 65306, 65307, 8216,
+            8217, 8220, 8221, 12304, 12305, 12289, 12298, 12299,
+            126, 183, 64, 124, 35, 65509, 37, 8230, 38, 42, 65288,
+            65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59,
+            58, 39, 34, 123, 125, 91, 93, 92, 124, 35, 36, 37, 94, 38,
+            42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733, 32, 12288
+        }
+        self.otherSet |= LETTERS_AND_DIGITS_SET
+
+        self.singlePunSet = {
+            65292, 12290, 65311, 65281, 65306, 65307, 8216, 8217, 8220,
+            8221, 1230, 12304, 12305, 12289, 12298, 12299, 64, 35, 65288,
+            65289, 34, 91, 93, 126, 47, 44, 58, 63, 9700, 9734, 9733, 8230,
+            39, 33, 42, 43, 62, 40, 41, 59, 61, 32, 12288
+        }
+
+        self.httpSet = HTTP_SYMBOL_SET | LETTERS_AND_DIGITS_SET
         self.t2s = {}
         self.s2t = {}
         self.rmSpace = rm_space
-        for i in range(65, 91):
-            self.otherSet.append(i)
-            self.httpSet.append(i)
-        for i in range(97, 123):
-            self.otherSet.append(i)
-            self.httpSet.append(i)
-        for i in range(48, 58):
-            self.otherSet.append(i)
-            self.httpSet.append(i)
-        other = [65292, 12290, 65311, 65281, 65306, 65307, 8216, \
-                8217, 8220, 8221, 12304, 12305, \
-                12289, 12298, 12299, 126, 183, 64, 124, 35, 65509, 37, 8230, 38, 42, 65288, \
-                65289, 8212, 45, 43, 61, 44, 46, 60, 62, 63, 47, 33, 59, 58, 39, 34, 123, 125, \
-                91, 93, 92, 124, 35, 36, 37, 94, 38, 42, 40, 41, 95, 45, 43, 61, 9700, 9734, 9733, 32, 12288]
-        templen = 63
-        for i in range(templen):
-            self.otherSet.append(other[i])
-
-        singlePun = [65292, 12290, 65311, 65281, 65306, 65307, 8216, 8217, 8220, 8221, 1230, 12304, \
-                    12305, 12289, 12298, 12299, 64,35, 65288, 65289, 34, 91, 93, 126, 47, 44, 58, \
-                    63, 9700, 9734, 9733, 8230, 39, 33, 42, 43, 62, 40, 41, 59, 61, 32, 12288]
-        templen = 41
-        for i in range(templen):
-            self.singlePunSet.append(singlePun[i])
-
-        httpChar = ['/', '.', ':', '#', '"', '_', '-', '=', '+', '&', '$', ';']
-        templen = 12
-        for i in range(templen):
-            self.httpSet.append(ord(httpChar[i]))
 
     def isOther(self, c):
-        if(c in self.otherSet):
-            return True
-        else:
-            return False
-    
+        return c in self.otherSet
+
     def isSinglePun(self, c):
-        if(c in self.singlePunSet):
-            return True
-        else:
-            return False
-    
+        return c in self.singlePunSet
+
     def isHttp(self, c):
-        if(c in self.httpSet):
-            return True
-        else:
-            return False
+        return c in self.httpSet
 
     def setT2SMap(self, filename):
         file = open(filename, "rb")
@@ -167,7 +153,7 @@ class Preprocesser:
                         senClean += sentence[i]
                         graph.append(9)
                         hasSinglePun = False
-                    else:  
+                    else:
                         senClean += sentence[i]
                         graph.append(15)
                 else:
@@ -190,12 +176,12 @@ class Preprocesser:
                 # print sentence + ":Here" + str(titleRaw) + ":" + str(start) + ":" + str(size) + ":" + str(len(graph))
                 if(len(titleRaw) == 1):
                     graph[start] =  9
-                    continue    
+                    continue
                 graph[start] = 1
                 for j in range(start + 1, start + size - 1):
                     graph[j] = 2
                 graph[start + size - 1] = 4
-        
+
         if(len(graph) != 0):
             graph[0] = graph[0] & 9
             graph[-1] = graph[-1] & 12
@@ -231,7 +217,7 @@ class Preprocesser:
         for w in sentence:
             newSentence += self.getT2S(w)
         return newSentence
-    
+
     def S2T(self, sentence, oriSentence):
         count = 0
         for w in sentence:
@@ -249,12 +235,12 @@ class Preprocesser:
         # for(int i=0;i<(int)sentence.length();i++)
         for i in range(len(sentence)):
             c = sentence[i]
-            if(c==32 or c==12288):
+            if(c == 32 or c == 12288):
                 if(hasSpace):
                     continue
                 else:
                     if(len(graph) > 0):
-                        if(wordLength == 1):   
+                        if(wordLength == 1):
                             graph[-1] = 8
                         else:
                             graph[-1] = 4
@@ -274,7 +260,7 @@ class Preprocesser:
 
                 wordLength = wordLength + 1
         if(len(graph) > 0):
-            if(wordLength == 1):   
+            if(wordLength == 1):
                 graph[-1] = 8
             else:
                 graph[-1] = 4
