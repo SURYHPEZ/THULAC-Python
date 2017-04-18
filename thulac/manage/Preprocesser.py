@@ -48,15 +48,15 @@ class Preprocesser:
         return c in self.httpSet
 
     def setT2SMap(self, filename):
-        file = open(filename, "rb")
-        self.datSize = int(os.path.getsize(filename) / 8)
-        tempbytes = file.read(4 * self.datSize)
-        tra = struct.unpack("<"+str(self.datSize)+"i", tempbytes)
-        tempbytes = file.read(4 * self.datSize)
-        sim = struct.unpack("<"+str(self.datSize)+"i", tempbytes)
-        for i in range(self.datSize):
-            self.t2s[tra[i]] = sim[i]
-            self.s2t[sim[i]] = tra[i]
+        with open(filename, "rb") as cotent:
+            self.datSize = int(os.path.getsize(filename) / 8)
+            tempbytes = cotent.read(4 * self.datSize)
+            tra = struct.unpack("<"+str(self.datSize)+"i", tempbytes)
+            tempbytes = cotent.read(4 * self.datSize)
+            sim = struct.unpack("<"+str(self.datSize)+"i", tempbytes)
+            for i in range(self.datSize):
+                self.t2s[tra[i]] = sim[i]
+                self.s2t[sim[i]] = tra[i]
 
     def clean(self, sentence):
         senClean = ""
